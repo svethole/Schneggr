@@ -19,7 +19,7 @@ void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double p
                 QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("../assets/") + filename)
             };
             for (const QString &path : paths) {
-                if (QFileInfo::isFile(path)) {
+                if (QFileInfo(path).isFile()) {
                     QPixmap pixmap(path);
                     if (!pixmap.isNull()) return pixmap;
                 }
