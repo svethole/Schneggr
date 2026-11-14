@@ -6,7 +6,7 @@
 #include <QFileInfo>
 #include <QPixmap>
 
-void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double phase, double vx, bool blinking, double gazeX, double gazeY) {
+void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double phase, double vx, bool blinking, double gazeX, double gazeY, bool prototypeSprites) {
         p.setRenderHint(QPainter::Antialiasing);
         p.translate(width/2.0, height/2.0 + (mood==Mood::Wander ? std::sin(phase)*1.5 : 0));
         p.scale(0.7, 0.7);
@@ -28,6 +28,20 @@ void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double p
         };
         static const QPixmap cgi = loadArtwork(QStringLiteral("schneggr.png"));
         static const QPixmap eyelids = loadArtwork(QStringLiteral("schneggr_eyelids.png"));
+        static const QStringList spriteNames = {
+            QStringLiteral("crawl_00"), QStringLiteral("crawl_01"),
+            QStringLiteral("crawl_02"), QStringLiteral("crawl_03"),
+            QStringLiteral("gaze_left"), QStringLiteral("gaze_center"),
+            QStringLiteral("gaze_right"), QStringLiteral("gaze_up"),
+            QStringLiteral("face_smile"), QStringLiteral("face_surprised"),
+            QStringLiteral("face_bored"), QStringLiteral("face_sleep")
+        };
+        static const QVector<QPixmap> sprites = [&loadArtwork] {
+            QVector<QPixmap> frames;
+            for (const QString &name : spriteNames)
+                frames.append(loadArtwork(name + QStringLiteral(".png")));
+            return frames;
+        }();
         if (!cgi.isNull()) {
             p.setRenderHint(QPainter::SmoothPixmapTransform);
             // Subtle whole-image movement; the CGI asset is still a single static frame.
@@ -53,8 +67,23 @@ void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double p
             const QRectF bounds(-73, -40, 146, 82);
             // Until a pixel-aligned eyelid overlay is available, keep the original
             // CGI image unchanged to avoid flashes in color and lighting.
-            p.drawPixmap(bounds, cgi, QRectF(cgi.rect()));
-            if ((blinking || mood == Mood::Sleep) && !eyelids.isNull()) {
+            const QPixmap *art = &cgi;
+            if (prototypeSprites) {
+                int frame = 8;
+                if (mood == Mood::Wander) {
+                    frame = (std::abs(gazeX) > 0.35 || gazeY < -0.5)
+                        ? (gazeY < -0.5 ? 7 : (gazeX < 0 ? 4 : 6))
+                        : (static_cast<int>(std::floor(phase * 1.6)) % 4);
+                } else if (mood == Mood::Look) frame = 5;
+                else if (mood == Mood::Sleep) frame = 11;
+                else if (mood == Mood::Eat) frame = static_cast<int>(phase * 1.8) % 2 ? 8 : 9;
+                else if (mood == Mood::Play) frame = 9;
+                else if (mood == Mood::Pet) frame = 8;
+                if (frame >= 0 && frame < sprites.size() && !sprites[frame].isNull())
+                    art = &sprites[frame];
+            }
+            p.drawPixmap(bounds, *art, QRectF(art->rect()));
+            if (art == &cgi && (blinking || mood == Mood::Sleep) && !eyelids.isNull()) {
                 // The transparent eyelid layer uses the original image coordinates.
                 p.drawPixmap(bounds, eyelids, QRectF(eyelids.rect()));
             }
