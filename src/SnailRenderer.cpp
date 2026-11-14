@@ -27,7 +27,6 @@ void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double p
             return {};
         };
         static const QPixmap cgi = loadArtwork(QStringLiteral("schneggr.png"));
-        static const QPixmap closedEyes = loadArtwork(QStringLiteral("schneggr_eyes_closed.png"));
         if (!cgi.isNull()) {
             p.setRenderHint(QPainter::SmoothPixmapTransform);
             // Subtle whole-image movement; the CGI asset is still a single static frame.
@@ -49,8 +48,9 @@ void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double p
             }
             // Preserve the artwork's aspect ratio inside the existing transparent pet window.
             const QRectF bounds(-73, -40, 146, 82);
-            const QPixmap &frame = ((blinking || mood == Mood::Sleep) && !closedEyes.isNull()) ? closedEyes : cgi;
-            p.drawPixmap(bounds, frame, QRectF(frame.rect()));
+            // Until a pixel-aligned eyelid overlay is available, keep the original
+            // CGI image unchanged to avoid flashes in color and lighting.
+            p.drawPixmap(bounds, cgi, QRectF(cgi.rect()));
             p.restore();
 
             // Simple mood indicators until dedicated CGI animation frames exist.
