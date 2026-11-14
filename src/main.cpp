@@ -26,6 +26,7 @@ class Pet : public QWidget {
     int steps = 0, moodTicks = 0, idleTicks = 0;
     int blinkTicks = 0, nextBlink = 35;
     bool roaming = false;
+    bool prototypeSprites = false;
     double gazeX = 0.0, gazeY = 0.0;
     QRect desktop;
     void moodFor(Mood m, int duration) { mood=m; moodTicks=duration; update(); }
@@ -46,6 +47,12 @@ public:
         menu->addAction("⚽ Ball geben",this,[this]{moodFor(Mood::Play,100);});
         menu->addAction("💤 Nickerchen",this,[this]{moodFor(Mood::Sleep,160);});
         menu->addAction("👀 Neugier testen",this,[this]{moodFor(Mood::Look,80);});
+        QAction *prototypeAction = menu->addAction("🧪 Animationsbilder testen");
+        prototypeAction->setCheckable(true);
+        connect(prototypeAction, &QAction::toggled, this, [this](bool enabled) {
+            prototypeSprites = enabled;
+            update();
+        });
         menu->addSeparator();
         menu->addAction("Ausblenden",this,&QWidget::hide);
         menu->addAction("Beenden",qApp,&QApplication::quit);
@@ -99,7 +106,7 @@ public:
         tick.setInterval(100); tick.start();
     }
 protected:
-    void paintEvent(QPaintEvent*) override {QPainter p(this); SnailRenderer::draw(p, width(), height(), mood, phase, vx, blinkTicks > 0, gazeX, gazeY);}
+    void paintEvent(QPaintEvent*) override {QPainter p(this); SnailRenderer::draw(p, width(), height(), mood, phase, vx, blinkTicks > 0, gazeX, gazeY, prototypeSprites);}
     void mousePressEvent(QMouseEvent *e) override {if(e->button()==Qt::LeftButton) moodFor(Mood::Pet,45); QWidget::mousePressEvent(e);}
 };
 int main(int argc,char**argv) {
