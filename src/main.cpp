@@ -26,6 +26,7 @@ class Pet : public QWidget {
     int steps = 0, moodTicks = 0, idleTicks = 0;
     int blinkTicks = 0, nextBlink = 35;
     bool roaming = false;
+    double gazeX = 0.0, gazeY = 0.0;
     QRect desktop;
     void moodFor(Mood m, int duration) { mood=m; moodTicks=duration; update(); }
     void resetBounds() { desktop = screen() ? screen()->availableGeometry() : QGuiApplication::primaryScreen()->availableGeometry(); }
@@ -60,6 +61,14 @@ public:
         connect(&tick,&QTimer::timeout,this,[this]{
             if(!isVisible()) return;
             ++steps; phase+=0.3;
+            // Follow nearby pointer movement smoothly; never move the window itself.
+            const QPointF delta = QPointF(QCursor::pos()) - QPointF(x + width()/2.0, y + height()/2.0);
+            const double targetX = (mood == Mood::Wander && std::abs(delta.x()) < 240 && std::abs(delta.y()) < 160)
+                ? std::clamp(delta.x() / 120.0, -1.0, 1.0) : 0.0;
+            const double targetY = (mood == Mood::Wander && std::abs(delta.x()) < 240 && std::abs(delta.y()) < 160)
+                ? std::clamp(delta.y() / 100.0, -1.0, 1.0) : 0.0;
+            gazeX += (targetX - gazeX) * 0.14;
+            gazeY += (targetY - gazeY) * 0.14;
             if (blinkTicks > 0) {
                 --blinkTicks;
             } else if (--nextBlink <= 0) {
@@ -89,7 +98,7 @@ public:
         tick.setInterval(100); tick.start();
     }
 protected:
-    void paintEvent(QPaintEvent*) override {QPainter p(this); SnailRenderer::draw(p, width(), height(), mood, phase, vx, blinkTicks > 0);}
+    void paintEvent(QPaintEvent*) override {QPainter p(this); SnailRenderer::draw(p, width(), height(), mood, phase, vx, blinkTicks > 0, gazeX, gazeY);}
     void mousePressEvent(QMouseEvent *e) override {if(e->button()==Qt::LeftButton) moodFor(Mood::Pet,45); QWidget::mousePressEvent(e);}
 };
 int main(int argc,char**argv) {
