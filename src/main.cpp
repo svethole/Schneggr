@@ -36,7 +36,7 @@ public:
         setWindowFlags(Qt::FramelessWindowHint | Qt::Tool | Qt::WindowStaysOnTopHint);
         setAttribute(Qt::WA_TranslucentBackground);
         setAttribute(Qt::WA_NoSystemBackground);
-        setFixedSize(160,110);
+        setFixedSize(112,77);
         resetBounds(); x=desktop.left()+80; y=desktop.bottom()-height()+1;
         move(int(x),int(y));
         QMenu *menu=new QMenu(this);
