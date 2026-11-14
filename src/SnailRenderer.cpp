@@ -6,7 +6,7 @@
 #include <QFileInfo>
 #include <QPixmap>
 
-void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double phase, double vx, bool blinking) {
+void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double phase, double vx, bool blinking, double gazeX, double gazeY) {
         p.setRenderHint(QPainter::Antialiasing);
         p.translate(width/2.0, height/2.0 + (mood==Mood::Wander ? std::sin(phase)*1.5 : 0));
         p.scale(0.7, 0.7);
@@ -34,12 +34,17 @@ void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double p
             // Keep changes small so the snail stays within its transparent window.
             p.save();
             if (mood == Mood::Wander) {
+                // Gentle curiosity: tilt toward the pointer without altering the CGI eyes.
+                p.rotate(1.8 * gazeX);
+                p.translate(0.6 * gazeX, 0.4 * gazeY);
                 const double wave = std::sin(phase);
                 p.scale(1.0 + 0.012 * wave, 1.0 - 0.018 * wave);
                 p.rotate(0.8 * std::sin(phase * 0.5));
             } else if (mood == Mood::Sleep) {
-                p.scale(1.0 + 0.004 * std::sin(phase * 0.3),
-                        1.0 - 0.008 * std::sin(phase * 0.3));
+                // Slow, nearly imperceptible breathing, with eyelids held shut.
+                const double breath = std::sin(phase * 0.18);
+                p.translate(0, -0.7 * breath);
+                p.scale(1.0 + 0.003 * breath, 1.0 - 0.012 * breath);
             } else if (mood == Mood::Pet || mood == Mood::Play) {
                 p.translate(0, -1.5 * std::abs(std::sin(phase)));
             } else if (mood == Mood::Look) {
