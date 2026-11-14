@@ -27,6 +27,7 @@ void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double p
             return {};
         };
         static const QPixmap cgi = loadArtwork(QStringLiteral("schneggr.png"));
+        static const QPixmap eyelids = loadArtwork(QStringLiteral("schneggr_eyelids.png"));
         if (!cgi.isNull()) {
             p.setRenderHint(QPainter::SmoothPixmapTransform);
             // Subtle whole-image movement; the CGI asset is still a single static frame.
@@ -51,6 +52,10 @@ void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double p
             // Until a pixel-aligned eyelid overlay is available, keep the original
             // CGI image unchanged to avoid flashes in color and lighting.
             p.drawPixmap(bounds, cgi, QRectF(cgi.rect()));
+            if ((blinking || mood == Mood::Sleep) && !eyelids.isNull()) {
+                // The transparent eyelid layer uses the original image coordinates.
+                p.drawPixmap(bounds, eyelids, QRectF(eyelids.rect()));
+            }
             p.restore();
 
             // Simple mood indicators until dedicated CGI animation frames exist.
