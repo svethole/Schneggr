@@ -12,8 +12,7 @@ void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double p
         p.scale(0.7, 0.7);
         if(vx < 0) p.scale(-1,1);
         // Optional CGI artwork: keep the vector snail as a fallback until the asset is installed.
-        static const QPixmap cgi = [] {
-            const QString filename = QStringLiteral("schneggr.png");
+        const auto loadArtwork = [](const QString &filename) -> QPixmap {
             const QStringList paths = {
                 QDir::current().filePath(QStringLiteral("assets/") + filename),
                 QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("assets/") + filename),
@@ -25,8 +24,10 @@ void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double p
                     if (!pixmap.isNull()) return pixmap;
                 }
             }
-            return QPixmap{};
-        }();
+            return {};
+        };
+        static const QPixmap cgi = loadArtwork(QStringLiteral("schneggr.png"));
+        static const QPixmap closedEyes = loadArtwork(QStringLiteral("schneggr_eyes_closed.png"));
         if (!cgi.isNull()) {
             p.setRenderHint(QPainter::SmoothPixmapTransform);
             // Subtle whole-image movement; the CGI asset is still a single static frame.
@@ -48,7 +49,8 @@ void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double p
             }
             // Preserve the artwork's aspect ratio inside the existing transparent pet window.
             const QRectF bounds(-73, -40, 146, 82);
-            p.drawPixmap(bounds, cgi, QRectF(cgi.rect()));
+            const QPixmap &frame = ((blinking || mood == Mood::Sleep) && !closedEyes.isNull()) ? closedEyes : cgi;
+            p.drawPixmap(bounds, frame, QRectF(frame.rect()));
             p.restore();
 
             // Simple mood indicators until dedicated CGI animation frames exist.
