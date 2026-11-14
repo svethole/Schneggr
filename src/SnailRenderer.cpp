@@ -35,20 +35,21 @@ void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double p
             p.save();
             if (mood == Mood::Wander) {
                 // Gentle curiosity: tilt toward the pointer without altering the CGI eyes.
-                p.rotate(1.8 * gazeX);
-                p.translate(0.6 * gazeX, 0.4 * gazeY);
+                p.rotate(5.0 * gazeX);
+                p.translate(2.0 * gazeX, 1.5 * gazeY);
                 const double wave = std::sin(phase);
                 p.scale(1.0 + 0.012 * wave, 1.0 - 0.018 * wave);
                 p.rotate(0.8 * std::sin(phase * 0.5));
             } else if (mood == Mood::Sleep) {
                 // Slow, nearly imperceptible breathing, with eyelids held shut.
-                const double breath = std::sin(phase * 0.18);
-                p.translate(0, -0.7 * breath);
-                p.scale(1.0 + 0.003 * breath, 1.0 - 0.012 * breath);
+                const double breath = std::sin(phase * 0.12);
+                p.translate(0, -2.0 * breath);
+                p.scale(1.0 + 0.008 * breath, 1.0 - 0.045 * breath);
             } else if (mood == Mood::Pet || mood == Mood::Play) {
                 p.translate(0, -1.5 * std::abs(std::sin(phase)));
             } else if (mood == Mood::Look) {
-                p.rotate(1.2 * std::sin(phase * 0.4));
+                p.rotate(6.0 * std::sin(phase * 0.35));
+                p.translate(2.0 * std::sin(phase * 0.35), 0);
             } else if (mood == Mood::Eat) {
                 p.rotate(0.6 * std::sin(phase * 1.5));
             }
