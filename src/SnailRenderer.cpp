@@ -34,9 +34,6 @@ void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double p
             // Keep changes small so the snail stays within its transparent window.
             p.save();
             if (mood == Mood::Wander) {
-                // Gentle curiosity: tilt toward the pointer without altering the CGI eyes.
-                p.rotate(5.0 * gazeX);
-                p.translate(2.0 * gazeX, 1.5 * gazeY);
                 const double wave = std::sin(phase);
                 p.scale(1.0 + 0.012 * wave, 1.0 - 0.018 * wave);
                 p.rotate(0.8 * std::sin(phase * 0.5));
@@ -48,8 +45,7 @@ void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double p
             } else if (mood == Mood::Pet || mood == Mood::Play) {
                 p.translate(0, -1.5 * std::abs(std::sin(phase)));
             } else if (mood == Mood::Look) {
-                p.rotate(6.0 * std::sin(phase * 0.35));
-                p.translate(2.0 * std::sin(phase * 0.35), 0);
+                // Keep the body still until the eyestalks have their own sprite layer.
             } else if (mood == Mood::Eat) {
                 p.rotate(0.6 * std::sin(phase * 1.5));
             }
