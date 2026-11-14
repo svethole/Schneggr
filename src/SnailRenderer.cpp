@@ -9,6 +9,7 @@
 void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double phase, double vx, bool blinking) {
         p.setRenderHint(QPainter::Antialiasing);
         p.translate(width/2.0, height/2.0 + (mood==Mood::Wander ? std::sin(phase)*1.5 : 0));
+        p.scale(0.7, 0.7);
         if(vx < 0) p.scale(-1,1);
         // Optional CGI artwork: keep the vector snail as a fallback until the asset is installed.
         static const QPixmap cgi = [] {
