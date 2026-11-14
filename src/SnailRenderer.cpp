@@ -1,11 +1,38 @@
 #include "SnailRenderer.h"
 #include <QPainterPath>
 #include <cmath>
+#include <QCoreApplication>
+#include <QDir>
+#include <QFileInfo>
+#include <QPixmap>
 
 void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double phase, double vx, bool blinking) {
         p.setRenderHint(QPainter::Antialiasing);
         p.translate(width/2.0, height/2.0 + (mood==Mood::Wander ? std::sin(phase)*1.5 : 0));
         if(vx < 0) p.scale(-1,1);
+        // Optional CGI artwork: keep the vector snail as a fallback until the asset is installed.
+        static const QPixmap cgi = [] {
+            const QString filename = QStringLiteral("schneggr.png");
+            const QStringList paths = {
+                QDir::current().filePath(QStringLiteral("assets/") + filename),
+                QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("assets/") + filename),
+                QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("../assets/") + filename)
+            };
+            for (const QString &path : paths) {
+                if (QFileInfo::isFile(path)) {
+                    QPixmap pixmap(path);
+                    if (!pixmap.isNull()) return pixmap;
+                }
+            }
+            return QPixmap{};
+        }();
+        if (!cgi.isNull()) {
+            p.setRenderHint(QPainter::SmoothPixmapTransform);
+            // Preserve the artwork's aspect ratio inside the existing transparent pet window.
+            const QRectF bounds(-73, -40, 146, 82);
+            p.drawPixmap(bounds, cgi, QRectF(cgi.rect()));
+            return;
+        }
         p.setPen(QPen(QColor("#6d493d"), 2.4, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         p.setBrush(QColor("#c5e7a5"));
         QPainterPath body; body.moveTo(-44,25); body.cubicTo(-35,9,-10,8,10,17); body.cubicTo(30,20,37,13,42,10); body.cubicTo(45,25,34,33,10,33); body.lineTo(-38,33); body.closeSubpath(); p.drawPath(body);
