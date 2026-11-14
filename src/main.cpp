@@ -24,6 +24,7 @@ class Pet : public QWidget {
     QSystemTrayIcon tray;
     double x = 120, y = 120, vx = 0.65, phase = 0;
     int steps = 0, moodTicks = 0, idleTicks = 0;
+    int blinkTicks = 0, nextBlink = 35;
     bool roaming = false;
     QRect desktop;
     void moodFor(Mood m, int duration) { mood=m; moodTicks=duration; update(); }
@@ -42,10 +43,16 @@ class Pet : public QWidget {
         if(mood != Mood::Sleep) {
             p.setPen(QPen(QColor("#6d493d"), 3, Qt::SolidLine, Qt::RoundCap));
             p.drawLine(QPointF(29,13),QPointF(28,-18)); p.drawLine(QPointF(40,12),QPointF(44,-21));
-            p.setBrush(QColor("#f6f3dc")); p.setPen(QPen(QColor("#6d493d"),2));
-            p.drawEllipse(QRectF(20,-29,17,17)); p.drawEllipse(QRectF(36,-33,17,17));
-            p.setBrush(QColor("#342d32")); p.setPen(Qt::NoPen);
-            p.drawEllipse(QRectF(29,-24,5,7)); p.drawEllipse(QRectF(45,-28,5,7));
+            if (blinkTicks > 0) {
+                p.setPen(QPen(QColor("#6d493d"), 2.5, Qt::SolidLine, Qt::RoundCap));
+                p.drawArc(QRectF(22,-19,15,8), 180*16, 180*16);
+                p.drawArc(QRectF(38,-23,15,8), 180*16, 180*16);
+            } else {
+                p.setBrush(QColor("#f6f3dc")); p.setPen(QPen(QColor("#6d493d"),2));
+                p.drawEllipse(QRectF(20,-29,17,17)); p.drawEllipse(QRectF(36,-33,17,17));
+                p.setBrush(QColor("#342d32")); p.setPen(Qt::NoPen);
+                p.drawEllipse(QRectF(29,-24,5,7)); p.drawEllipse(QRectF(45,-28,5,7));
+            }
         } else {
             p.setPen(QPen(QColor("#6d493d"), 2, Qt::SolidLine, Qt::RoundCap));
             p.drawArc(QRectF(22,4,13,7),0,180*16); p.drawArc(QRectF(36,3,13,7),0,180*16);
@@ -91,6 +98,12 @@ public:
         connect(&tick,&QTimer::timeout,this,[this]{
             if(!isVisible()) return;
             ++steps; phase+=0.3;
+            if (blinkTicks > 0) {
+                --blinkTicks;
+            } else if (--nextBlink <= 0) {
+                blinkTicks = 2;
+                nextBlink = QRandomGenerator::global()->bounded(30, 81);
+            }
             if(moodTicks>0) { --moodTicks; if(moodTicks==0) mood=Mood::Wander; }
             if(mood==Mood::Wander) {
                 x+=vx;
