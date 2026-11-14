@@ -29,9 +29,47 @@ void SnailRenderer::draw(QPainter &p, int width, int height, Mood mood, double p
         }();
         if (!cgi.isNull()) {
             p.setRenderHint(QPainter::SmoothPixmapTransform);
+            // Subtle whole-image movement; the CGI asset is still a single static frame.
+            // Keep changes small so the snail stays within its transparent window.
+            p.save();
+            if (mood == Mood::Wander) {
+                const double wave = std::sin(phase);
+                p.scale(1.0 + 0.012 * wave, 1.0 - 0.018 * wave);
+                p.rotate(0.8 * std::sin(phase * 0.5));
+            } else if (mood == Mood::Sleep) {
+                p.scale(1.0 + 0.004 * std::sin(phase * 0.3),
+                        1.0 - 0.008 * std::sin(phase * 0.3));
+            } else if (mood == Mood::Pet || mood == Mood::Play) {
+                p.translate(0, -1.5 * std::abs(std::sin(phase)));
+            } else if (mood == Mood::Look) {
+                p.rotate(1.2 * std::sin(phase * 0.4));
+            } else if (mood == Mood::Eat) {
+                p.rotate(0.6 * std::sin(phase * 1.5));
+            }
             // Preserve the artwork's aspect ratio inside the existing transparent pet window.
             const QRectF bounds(-73, -40, 146, 82);
             p.drawPixmap(bounds, cgi, QRectF(cgi.rect()));
+            p.restore();
+
+            // Simple mood indicators until dedicated CGI animation frames exist.
+            if (mood == Mood::Sleep || mood == Mood::Pet) {
+                p.save();
+                QFont font = p.font();
+                font.setBold(true);
+                font.setPixelSize(mood == Mood::Sleep ? 17 : 20);
+                p.setFont(font);
+                p.setPen(mood == Mood::Sleep ? QColor("#7764a5") : QColor("#dc5c83"));
+                p.drawText(QPointF(-50, -25), mood == Mood::Sleep
+                           ? QStringLiteral("Zz") : QStringLiteral("♥"));
+                p.restore();
+            }
+            if (mood == Mood::Play) {
+                p.save();
+                p.setPen(QPen(QColor("#96563f"), 1.5));
+                p.setBrush(QColor("#f5a96e"));
+                p.drawEllipse(QRectF(49, 24, 12, 12));
+                p.restore();
+            }
             return;
         }
         p.setPen(QPen(QColor("#6d493d"), 2.4, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
