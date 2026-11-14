@@ -45,6 +45,7 @@ public:
         menu->addAction("♥ Streicheln",this,[this]{moodFor(Mood::Pet,60);});
         menu->addAction("⚽ Ball geben",this,[this]{moodFor(Mood::Play,100);});
         menu->addAction("💤 Nickerchen",this,[this]{moodFor(Mood::Sleep,160);});
+        menu->addAction("👀 Neugier testen",this,[this]{moodFor(Mood::Look,80);});
         menu->addSeparator();
         menu->addAction("Ausblenden",this,&QWidget::hide);
         menu->addAction("Beenden",qApp,&QApplication::quit);
@@ -63,10 +64,10 @@ public:
             ++steps; phase+=0.3;
             // Follow nearby pointer movement smoothly; never move the window itself.
             const QPointF delta = QPointF(QCursor::pos()) - QPointF(x + width()/2.0, y + height()/2.0);
-            const double targetX = (mood == Mood::Wander && std::abs(delta.x()) < 240 && std::abs(delta.y()) < 160)
-                ? std::clamp(delta.x() / 120.0, -1.0, 1.0) : 0.0;
+            const double targetX = (mood == Mood::Wander && std::abs(delta.x()) < 360 && std::abs(delta.y()) < 240)
+                ? std::clamp(delta.x() / 150.0, -1.0, 1.0) : 0.0;
             const double targetY = (mood == Mood::Wander && std::abs(delta.x()) < 240 && std::abs(delta.y()) < 160)
-                ? std::clamp(delta.y() / 100.0, -1.0, 1.0) : 0.0;
+                ? std::clamp(delta.y() / 120.0, -1.0, 1.0) : 0.0;
             gazeX += (targetX - gazeX) * 0.14;
             gazeY += (targetY - gazeY) * 0.14;
             if (blinkTicks > 0) {
